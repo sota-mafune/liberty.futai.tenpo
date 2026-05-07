@@ -1,79 +1,50 @@
-@charset "UTF-8";
+/* --- 共通設定はそのまま --- */
+table { border-collapse: separate; border-spacing: 0; background: white; }
 
-/* --- 全体設定 --- */
-body { font-family: "Meiryo", sans-serif; font-size: 10px; margin: 0; background-color: #f4f7f6; color: #333; overflow: hidden; }
-
-/* --- ヘッダー・フィルター --- */
-.tab-menu-container { 
-    position: sticky; top: 0; z-index: 2000; background: #fff; padding: 10px 15px; 
-    border-bottom: 2px solid #ccc; display: flex; align-items: center; justify-content: flex-start; gap: 20px; flex-wrap: wrap; 
+/* --- 月次テーブル（担当者別）専用：絶対に崩さない設定 --- */
+#staff-table-container table { table-layout: fixed !important; width: max-content; }
+#staff-table-container th, 
+#staff-table-container td { 
+    width: 100px !important; 
+    min-width: 100px !important; 
+    max-width: 100px !important; 
+    border: 1px solid #d9d9d9;
+    padding: 0;
 }
-.tab-btn-group { display: flex; gap: 5px; }
-.tab-btn { padding: 6px 15px; cursor: pointer; border: 1px solid #ccc; background: #eee; font-weight: bold; border-radius: 4px; font-size: 11px; }
-.tab-btn.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+/* 月次用の固定列幅 */
+#staff-table-container .sticky-col-item { width: 170px !important; min-width: 170px !important; }
+#staff-table-container .sticky-col-total { width: 105px !important; min-width: 105px !important; }
 
-.filter-group { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 11px; flex-shrink: 0; }
-.date-input, select { padding: 3px 8px; border-radius: 4px; border: 1px solid #999; font-size: 11px; background: #fff; }
-#store-selector { min-width: 130px !important; cursor: pointer; } /* 店舗選択のみ幅を確保 */
-
-.table-wrapper { overflow: auto; height: calc(100vh - 65px); width: 100vw; }
-
-/* --- 共通テーブル設定 --- */
-table { border-collapse: separate; border-spacing: 0; background: white; table-layout: fixed !important; }
-th, td { border: 1px solid #d9d9d9; padding: 0; text-align: center; white-space: nowrap; box-sizing: border-box; overflow: hidden; }
-
-/* --- 月次テーブル（担当者別）専用の設定 --- */
-/* 日次テーブルに干渉しないよう、IDで範囲を限定します */
-#staff-table-container th, #staff-table-container td { width: 100px !important; }
-
-.sticky-col-item { 
-    position: sticky !important; left: 0 !important; background-color: #f2f2f2; font-weight: bold; 
-    z-index: 110 !important; border-right: 2px solid #444 !important; width: 170px !important; text-align: left; padding-left: 5px; 
+/* --- 日次テーブル（推移）専用：画面の半分程度まで広げる設定 --- */
+.daily-table { 
+    table-layout: fixed !important; 
+    width: 950px !important; /* 狭すぎたので画面の半分強（950px）に設定 */
+    font-size: 10px !important; /* 文字サイズを少し戻す */
+    border-collapse: collapse;
 }
-.sticky-col-total { 
-    position: sticky !important; left: 170px !important; background-color: #fff9e6; font-weight: bold; 
-    z-index: 100 !important; border-right: 2px solid #444 !important; width: 105px !important; 
+.daily-table th, 
+.daily-table td { 
+    padding: 4px 1px !important; 
+    border: 1px solid #ccc;
+    /* 月次の100px設定をここで打ち消す */
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
 }
 
-.shop-header { background-color: #44546a; color: white; height: 35px; position: sticky; top: 0; z-index: 150; }
-.section-row { background-color: #adb9ca; font-weight: bold; text-align: left; padding: 4px 10px; color: black; font-size: 11px; position: sticky; left: 0; z-index: 180; }
+/* 日次テーブルの列幅：スプレッドシート風に微調整 */
+.w-date-n { width: 30px !important; text-align: right !important; } /* 日付数字 */
+.w-date-w { width: 30px !important; } /* 曜日 */
+.w-num   { width: 40px !important; } /* 数値（来場・実績など） */
+.w-mid   { width: 50px !important; } /* 予算・進捗など */
+.w-rate  { width: 45px !important; } /* ％列 */
+.w-last  { width: 35px !important; } /* 昨年データ列 */
 
-/* --- 日次テーブル（推移）専用の極細設定 --- */
-.daily-table { width: auto !important; font-size: 9px !important; }
-.daily-table th, .daily-table td { 
-    width: auto !important; min-width: 0 !important; max-width: none !important; 
-    padding: 2px 0px !important; border: 1px solid #ccc;
-}
-/* ヘッダー色付け */
-.daily-table thead th { background: #44546a; color: white; border: 1px solid #333; }
+/* ヘッダー色（画像再現） */
+.daily-table thead th { background: #44546a; color: white; }
 .bg-last-year { background: #efefff !important; color: #000 !important; }
 .bg-now-k { background: #444 !important; color: #fff !important; }
 .bg-now-f { background: #666 !important; color: #fff !important; }
 
-/* 各列の幅指定（JS側のクラス名と一致させてください） */
-.w-date-n { width: 22px !important; text-align: right !important; padding-right: 2px !important; }
-.w-date-w { width: 22px !important; }
-.w-num { width: 28px !important; }
-.w-rate { width: 35px !important; }
-
 /* 合計行 */
 .daily-total-row { background: #f2f2f2 !important; font-weight: bold; }
-.daily-total-row td { border-top: 2px solid #666 !important; }
-
-/* --- 三段・二段構成セル（月次用） --- */
-.cell-stack { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: center; }
-.stack-upper { display: flex; width: 100%; border-bottom: 1px dotted #d9d9d9; height: 18px; line-height: 18px; }
-.val-kei { color: #0070c0; width: 50%; border-right: 1px dotted #d9d9d9; font-size: 9px; }
-.val-fu { color: #c00000; width: 50%; font-size: 9px; }
-.stack-lower { font-weight: bold; height: 20px; line-height: 20px; color: #000; font-size: 10px; }
-.stack-label-3 { display: flex; width: 100%; border-bottom: 1px dotted #ccc; height: 13px; line-height: 13px; font-size: 8px; color: #333; background: rgba(0,0,0,0.03); }
-.stack-values-3 { display: flex; width: 100%; border-bottom: 1px dotted #ccc; height: 16px; line-height: 16px; }
-.stack-total-3 { font-weight: bold; height: 18px; line-height: 18px; color: #b00; font-size: 10px; }
-.bg-sou-upper { background-color: #ead1dc !important; font-weight: bold; height: 20px; line-height: 20px; font-size: 10px; border-bottom: 1px solid #d9d9d9 !important; display: flex; align-items: center; justify-content: center; }
-.bg-sou-lower { background-color: #ffffff !important; height: 18px; line-height: 18px; display: flex; justify-content: center; }
-
-/* --- その他 --- */
-.force-red { color: #ff0000 !important; }
-#loading { padding: 20px; color: #e67e22; font-weight: bold; }
-.page-content { display: none; } 
-.page-content.active { display: block; }
