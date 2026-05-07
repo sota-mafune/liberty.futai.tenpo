@@ -61,18 +61,74 @@ function aggregate(s, rec) {
     if (nD && nD >= st && nD <= ed && !isCancel) { s["del_cnt_"+c]++; s["del_ar21_"+c]+=(parseFloat(rec.arari21)||0); s["del_ar23_"+c]+=(parseFloat(rec.arari23)||0); s["del_ar22_"+c]+=(parseFloat(rec.arari22)||0); s["del_ar24_"+c]+=(parseFloat(rec.arari24)||0); s["del_ar25_"+c]+=(parseFloat(rec.arari25)||0); }
 }
 
+// function renderAll() {
+//     var loadingEl = document.getElementById('loading');
+//     var storeSet = new Set();
+//     staffStatsMaster = {}; staffStoreMap = {};
+//     var dailyStats = {}; 
+
+//     allData.forEach(r => { if(r.ServiceStore) storeSet.add(r.ServiceStore); });
+//     updateSelector('store-selector', storeSet, '全店舗表示');
+
+//     var selectedStore = document.getElementById('store-selector').value;
+//     var totalStaffS = createStats(), totalDailyS = createStats();
+
+//     var stStr = document.getElementById('start-date').value, edStr = document.getElementById('end-date').value;
+//     var dIter = new Date(stStr);
+//     while (dIter <= new Date(edStr)) {
+//         dailyStats[dIter.toISOString().split('T')[0]] = createStats();
+//         dIter.setDate(dIter.getDate() + 1);
+//     }
+
+//     allData.forEach(r => {
+//         if (selectedStore === "all" || r.ServiceStore === selectedStore) {
+//             var pr = (r.ServicePerson && r.ServicePerson.id) ? personMap[r.ServicePerson.id] : "未設定";
+//             if(!staffStatsMaster[pr]) staffStatsMaster[pr] = createStats();
+//             staffStoreMap[pr] = r.ServiceStore;
+//             aggregate(staffStatsMaster[pr], r); aggregate(totalStaffS, r);
+//             var vD = (r.VisitedDateTime || "").split('T')[0]; if(dailyStats[vD]) aggregate(dailyStats[vD], r);
+//         }
+//     });
+
+//     if(budgetDataGlobal) {
+//         var selM = document.getElementById('month-selector').value;
+//         if(budgetDataGlobal.sales_budget) budgetDataGlobal.sales_budget.forEach(b => {
+//             if((b["月"]||"").includes(selM) && (selectedStore === "all" || b["店舗"] === selectedStore)) {
+//                 var pr = b["担当者"]; if(!staffStatsMaster[pr]) staffStatsMaster[pr] = createStats();
+//                 var v_j = parseInt(b["成約台数予算"])||0, v_n = parseInt(b["納車予算"])||0, v_ar = parseInt(b["粗利予算"])||0;
+//                 staffStatsMaster[pr].budget_j += v_j; staffStatsMaster[pr].budget_n += v_n; staffStatsMaster[pr].budget_ar += v_ar;
+//                 totalStaffS.budget_j += v_j; totalStaffS.budget_n += v_n; totalStaffS.budget_ar += v_ar;
+//             }
+//         });
+//         if(budgetDataGlobal.daily_budget) budgetDataGlobal.daily_budget.forEach(b => {
+//             var d = (b["日"]||"").replace(/\//g, "-");
+//             if(dailyStats[d] && (selectedStore === "all" || b["店舗"] === selectedStore)) {
+//                 var v = parseInt(b["成約台数予算"])||0; dailyStats[d].budget_current += v; totalDailyS.budget_current += v;
+//             }
+//         });
+//     }
+
+//     setTimeout(() => {
+//         document.getElementById("staff-table-container").innerHTML = buildTable(staffStatsMaster, "担当者名", totalStaffS);
+//         document.getElementById("daily-table-container").innerHTML = buildDailyTable(dailyStats, totalDailyS);
+//         loadingEl.style.display = 'none';
+//     }, 500);
+// }
+
 function renderAll() {
     var loadingEl = document.getElementById('loading');
     var storeSet = new Set();
     staffStatsMaster = {}; staffStoreMap = {};
     var dailyStats = {}; 
 
+    // 1. 店舗リストの抽出とセレクター更新（ログイン店舗の自動セットは無し）
     allData.forEach(r => { if(r.ServiceStore) storeSet.add(r.ServiceStore); });
     updateSelector('store-selector', storeSet, '全店舗表示');
 
     var selectedStore = document.getElementById('store-selector').value;
     var totalStaffS = createStats(), totalDailyS = createStats();
 
+    // 2. 日付の「箱」を準備
     var stStr = document.getElementById('start-date').value, edStr = document.getElementById('end-date').value;
     var dIter = new Date(stStr);
     while (dIter <= new Date(edStr)) {
@@ -80,16 +136,23 @@ function renderAll() {
         dIter.setDate(dIter.getDate() + 1);
     }
 
+    // 3. 全データをループして集計（月次と日次を同時に実施）
     allData.forEach(r => {
         if (selectedStore === "all" || r.ServiceStore === selectedStore) {
+            // 月次（担当者別）の集計：既存の aggregate を使用
             var pr = (r.ServicePerson && r.ServicePerson.id) ? personMap[r.ServicePerson.id] : "未設定";
             if(!staffStatsMaster[pr]) staffStatsMaster[pr] = createStats();
             staffStoreMap[pr] = r.ServiceStore;
-            aggregate(staffStatsMaster[pr], r); aggregate(totalStaffS, r);
-            var vD = (r.VisitedDateTime || "").split('T')[0]; if(dailyStats[vD]) aggregate(dailyStats[vD], r);
+            aggregate(staffStatsMaster[pr], r); 
+            aggregate(totalStaffS, r);
+
+            // 日次（日付推移）の集計
+            var vD = (r.VisitedDateTime || "").split('T')[0]; 
+            if(dailyStats[vD]) aggregate(dailyStats[vD], r);
         }
     });
 
+    // 4. 予算データの集計（月次・日次の両方に反映）
     if(budgetDataGlobal) {
         var selM = document.getElementById('month-selector').value;
         if(budgetDataGlobal.sales_budget) budgetDataGlobal.sales_budget.forEach(b => {
@@ -108,8 +171,11 @@ function renderAll() {
         });
     }
 
+    // 5. 両方のテーブルを描画
     setTimeout(() => {
+        // 月タブ（担当者別テーブル）
         document.getElementById("staff-table-container").innerHTML = buildTable(staffStatsMaster, "担当者名", totalStaffS);
+        // 日タブ（日次推移テーブル）
         document.getElementById("daily-table-container").innerHTML = buildDailyTable(dailyStats, totalDailyS);
         loadingEl.style.display = 'none';
     }, 500);
@@ -189,3 +255,22 @@ function renderCell(s, r, isT) {
 function showPage(id) { document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-' + id.replace('-page', '')).classList.add('active'); }
 function filterStoreByGroup() { renderAll(); }
 function filterStaffByStore() { renderAll(); }
+
+function buildDailyTable(sum, totalS) {
+    const wDays = ["日", "月", "火", "水", "木", "金", "土"];
+    var h = "<table class='daily-table'><thead>";
+    h += "<tr><th rowspan='2' colspan='2' class='col-day'>日付</th><th rowspan='2' class='col-num'>新規<br>来場</th><th rowspan='2' class='col-num'>再<br>来場</th><th rowspan='2' class='col-num'>総<br>来場</th>";
+    h += "<th rowspan='2' class='col-num' style='background:#fff2cc;'>予算</th><th rowspan='2' class='col-num' style='background:#fff2cc;'>着地<br>予想</th><th rowspan='2' class='col-num'>実績</th><th rowspan='2' class='col-num'>予算<br>進捗</th><th rowspan='2' class='col-num'>予想<br>進捗</th><th rowspan='2' class='col-num'>商談<br>数</th><th rowspan='2' class='col-rate'>商談<br>率</th><th rowspan='2' class='col-rate'>成約<br>率</th>";
+    h += "<th colspan='3' style='background:#efefff;'>合計(昨年)</th><th colspan='3' style='background:#efefff;'>軽自動車(昨年)</th><th colspan='3' style='background:#efefff;'>普通車(昨年)</th>";
+    h += "<th colspan='3' style='background:#444; color:white;'>軽自動車</th><th colspan='3' style='background:#444; color:white;'>普通車</th></tr>";
+    h += "<tr><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th><th style='background:#444; color:white;'>新規</th><th style='background:#444; color:white;'>再来</th><th style='background:#444; color:white;'>実績</th><th style='background:#444; color:white;'>新規</th><th style='background:#444; color:white;'>再来</th><th style='background:#444; color:white;'>実績</th></tr></thead><tbody>";
+
+    Object.keys(sum).sort().forEach(date => {
+        var s = sum[date]; var d = new Date(date);
+        var vn = (s.v_n_k||0)+(s.v_n_f||0), rv = (s.rv_k||0)+(s.rv_f||0), totv = vn+rv, act = (s.j_k||0)+(s.j_f||0), bud = s.budget_current||0, sho = (s.sho_k||0)+(s.sho_f||0);
+        var prog = act - bud; var w = d.getDay();
+        var rowStyle = w === 0 ? "color:red;" : (w === 6 ? "color:blue;" : "");
+        h += `<tr><td>${d.getDate()}</td><td style='${rowStyle}'>${wDays[w]}</td><td>${vn||""}</td><td>${rv||""}</td><td>${totv||""}</td><td style='background:#fff2cc;'>${bud||""}</td><td style='background:#fff2cc;'>${bud||""}</td><td>${act||""}</td><td style='${prog < 0 ? "color:red" : ""}'>${prog||"0"}</td><td>0</td><td>${sho||""}</td><td>${vn?Math.round(sho/vn*100):0}%</td><td>${totv?Math.round(act/totv*100):0}%</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>${s.v_n_k||""}</td><td>${s.rv_k||""}</td><td>${s.j_k||""}</td><td>${s.v_n_f||""}</td><td>${s.rv_f||""}</td><td>${s.j_f||""}</td></tr>`;
+    });
+    return h + "</tbody></table>";
+}
