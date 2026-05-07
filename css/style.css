@@ -1,10 +1,30 @@
 @charset "UTF-8";
 body { font-family: "Meiryo", sans-serif; font-size: 10px; margin: 0; background-color: #f4f7f6; color: #333; overflow: hidden; }
-.tab-menu-container { position: sticky; top: 0; z-index: 2000; background: #fff; padding: 10px; border-bottom: 2px solid #ccc; display: flex; align-items: center; justify-content: space-between; }
+.tab-menu-container { 
+    position: sticky; 
+    top: 0; 
+    z-index: 2000; 
+    background: #fff; 
+    padding: 10px 15px; 
+    border-bottom: 2px solid #ccc; 
+    display: flex; 
+    align-items: center; 
+    /* space-betweenをやめて左詰めにし、要素間に隙間(gap)を作る */
+    justify-content: flex-start; 
+    gap: 20px; 
+    flex-wrap: wrap; /* 画面が狭い時に隠れず自動で折り返すようにする */
+}
 .tab-btn-group { display: flex; gap: 5px; }
 .tab-btn { padding: 6px 15px; cursor: pointer; border: 1px solid #ccc; background: #eee; font-weight: bold; border-radius: 4px; font-size: 11px; }
 .tab-btn.active { background: #2c3e50; color: white; border-color: #2c3e50; }
-.filter-group { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 11px; }
+.filter-group { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-weight: bold; 
+    font-size: 11px;
+    flex-shrink: 0; /* 幅を維持し、押しつぶされないようにする */
+}
 .date-input { padding: 2px 5px; border-radius: 4px; border: 1px solid #999; font-size: 11px; }
 select { padding: 3px 8px; border-radius: 4px; border: 1px solid #999; font-size: 11px; }
 .table-wrapper { overflow: auto; height: calc(100vh - 65px); width: 100vw; }
@@ -50,6 +70,15 @@ th, td {
     width: 105px !important; 
     min-width: 105px !important; 
     max-width: 105px !important; 
+}
+
+#store-selector {
+    min-width: 130px !important; /* 最低限の幅を確保 */
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid #999;
+    background-color: #fff;
+    cursor: pointer;
 }
 
 .shop-header { background-color: #44546a; color: white; height: 35px; position: sticky; top: 0; z-index: 150; }
