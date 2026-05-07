@@ -101,80 +101,120 @@ function aggregate(s, rec) {
 
 function renderAll() {
     var loadingEl = document.getElementById('loading');
-    var gS = {}, totalS = createStats(); staffStatsMaster = {}; storeStatsMaster = {}; var groupSet = new Set(), storeSet = new Set();
+    var storeSet = new Set();
+    staffStatsMaster = {}; // 担当者別（月タブ）
+    var dailyStats = {};   // 日付別（日タブ）
     
+    // 1. 日付範囲の取得と「日付別の箱(dailyStats)」の準備
+    var stStr = document.getElementById('start-date').value;
+    var edStr = document.getElementById('end-date').value;
+    if(!stStr || !edStr) return;
+
+    var dIter = new Date(stStr);
+    var dEnd = new Date(edStr);
+    while(dIter <= dEnd) {
+        var dKey = dIter.toISOString().split('T')[0];
+        dailyStats[dKey] = createStats();
+        dIter.setDate(dIter.getDate() + 1);
+    }
+
+    // 2. 店舗リストの作成（ログインユーザーの店舗を強制的に含める）
+    allData.forEach(r => { if(r.ServiceStore) storeSet.add(r.ServiceStore); });
+    if (loginUserStore) storeSet.add(loginUserStore);
+    updateSelector('store-selector', storeSet, '全店舗表示');
+
+    // 3. ログイン店舗の自動初期セット
+    var storeSel = document.getElementById('store-selector');
+    if (loginUserStore && (storeSel.value === "all" || storeSel.value === "")) {
+        for (var i = 0; i < storeSel.options.length; i++) {
+            if (storeSel.options[i].value === loginUserStore) {
+                storeSel.value = loginUserStore;
+                break;
+            }
+        }
+    }
+
+    var selectedStore = storeSel.value;
+    var totalStaffS = createStats(); // 月次合計用
+    var totalDailyS = createStats(); // 日次合計用
+
+    // 4. 実績データの集計（選択された店舗でフィルタリング）
     if(allData && allData.length > 0) {
         allData.forEach(r => {
-            var st = r.ServiceStore || "未所属", gr = storeToGroup[st] || "未所属";
-            var pr = "未設定"; if (r.ServicePerson && r.ServicePerson.id) pr = personMap[r.ServicePerson.id] || "ID:" + r.ServicePerson.id;
-            if(!gS[gr]) gS[gr] = createStats(); if(!storeStatsMaster[st]) storeStatsMaster[st] = createStats(); if(!staffStatsMaster[pr]) staffStatsMaster[pr] = createStats();
-            storeGroupMap[st] = gr; staffStoreMap[pr] = st; groupSet.add(gr); storeSet.add(st);
-            [gS[gr], storeStatsMaster[st], staffStatsMaster[pr], totalS].forEach(s => aggregate(s, r));
+            if (selectedStore === "all" || r.ServiceStore === selectedStore) {
+                // --- 月次（担当者別）の集計 ---
+                var pr = "未設定"; 
+                if (r.ServicePerson && r.ServicePerson.id) pr = personMap[r.ServicePerson.id] || "ID:" + r.ServicePerson.id;
+                if(!staffStatsMaster[pr]) staffStatsMaster[pr] = createStats();
+                
+                aggregate(staffStatsMaster[pr], r);
+                aggregate(totalStaffS, r);
+
+                // --- 日次（日付別）の集計 ---
+                var vD = (r.VisitedDateTime || "").split('T')[0]; // 来店日
+                var cD = (r.ClosingDay || "");                    // 成約日
+                
+                // 日次表は「来店ベース」で動くことが多いためvDで判定（必要に応じてcDに変更可）
+                if(dailyStats[vD]) {
+                    aggregate(dailyStats[vD], r);
+                    // totalDailySへの加算は、単純な累計ではない場合があるため、表示時に再計算するかここで加算
+                }
+            }
         });
     }
 
+    // 5. 予算データの集計と反映
     if(budgetDataGlobal) {
         var selectedMonth = document.getElementById('month-selector').value; 
         var targetDateStr = selectedMonth.replace("-", "/"); 
         var endDateStr = document.getElementById('end-date').value.replace(/-/g, "/"); 
 
+        // 月次予算（担当者別）
         if(budgetDataGlobal.sales_budget) {
             budgetDataGlobal.sales_budget.forEach(b => {
                 var d = b["月"] || "";
-                if(d.includes(targetDateStr) || d.includes(selectedMonth)) {
-                    var st = b["店舗"], pr = b["担当者"], gr = storeToGroup[st] || "未所属";
+                if((d.includes(targetDateStr) || d.includes(selectedMonth)) && (selectedStore === "all" || b["店舗"] === selectedStore)) {
+                    var pr = b["担当者"];
+                    if(!staffStatsMaster[pr]) staffStatsMaster[pr] = createStats();
                     
                     var val_j = parseInt(b["成約台数予算"]) || 0;
                     var val_n = parseInt(b["納車予算"]) || 0; 
                     var val_ar = parseInt(b["粗利予算"]) || 0; 
 
-                    if(!gS[gr]) gS[gr] = createStats(); 
-                    if(!storeStatsMaster[st]) storeStatsMaster[st] = createStats(); 
-                    if(!staffStatsMaster[pr]) staffStatsMaster[pr] = createStats();
+                    staffStatsMaster[pr].budget_j += val_j;
+                    staffStatsMaster[pr].budget_n += val_n;  
+                    staffStatsMaster[pr].budget_ar += val_ar; 
                     
-                    storeGroupMap[st] = gr; staffStoreMap[pr] = st; groupSet.add(gr); storeSet.add(st);
-                    
-                    [gS[gr], storeStatsMaster[st], staffStatsMaster[pr], totalS].forEach(s => {
-                        s.budget_j += val_j;
-                        s.budget_n += val_n;  
-                        s.budget_ar += val_ar; 
-                    });
+                    totalStaffS.budget_j += val_j;
+                    totalStaffS.budget_n += val_n;
+                    totalStaffS.budget_ar += val_ar;
                 }
             });
         }
+        // 日次予算（日付別推移）
         if(budgetDataGlobal.daily_budget) {
             budgetDataGlobal.daily_budget.forEach(b => {
-                var d = (b["日"] || "").replace(/-/g, "/"); 
-                if(d.startsWith(targetDateStr) && d <= endDateStr) {
-                    var st = b["店舗"], gr = storeToGroup[st] || "未所属";
+                var d = (b["日"] || "").replace(/\//g, "-"); 
+                if(dailyStats[d] && (selectedStore === "all" || b["店舗"] === selectedStore)) {
                     var val_cur = parseInt(b["成約台数予算"]) || 0;
-                    if(!gS[gr]) gS[gr] = createStats(); if(!storeStatsMaster[st]) storeStatsMaster[st] = createStats();
-                    gS[gr].budget_current += val_cur; storeStatsMaster[st].budget_current += val_cur; totalS.budget_current += val_cur;
+                    dailyStats[d].budget_current += val_cur;
+                    totalDailyS.budget_current += val_cur;
                 }
             });
         }
     }
 
+    // 6. 描画実行
     setTimeout(() => { 
         loadingEl.style.display = 'none'; 
         
-        updateSelector('group-selector', groupSet, '全グループ表示'); 
-        updateSelector('store-selector', storeSet, '全店舗表示');
-
-        // ★ ログインユーザーの店舗が店舗リストに存在する場合、自動選択する
-        var storeSel = document.getElementById('store-selector');
-        if (loginUserStore && storeSel.value === "all") {
-            for (var i = 0; i < storeSel.options.length; i++) {
-                if (storeSel.options[i].value === loginUserStore) {
-                    storeSel.value = loginUserStore;
-                    break;
-                }
-            }
+        // 月タブ（担当者別テーブル）の描画
+        document.getElementById("staff-table-container").innerHTML = buildTable(staffStatsMaster, "担当者名", totalStaffS);
+        
+        // 日タブ（日別推移テーブル）の描画
+        if (typeof buildDailyTable === "function") {
+            document.getElementById("daily-table-container").innerHTML = buildDailyTable(dailyStats, totalDailyS);
         }
-
-        document.getElementById("group-table-container").innerHTML = buildTable(gS, "グループ名", totalS);
-        filterStoreByGroup(); 
-        filterStaffByStore(); 
     }, 500);
 }
 
