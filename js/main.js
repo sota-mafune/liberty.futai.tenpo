@@ -259,11 +259,24 @@ function filterStaffByStore() { renderAll(); }
 function buildDailyTable(sum, totalS) {
     const wDays = ["日", "月", "火", "水", "木", "金", "土"];
     var h = "<table class='daily-table'><thead>";
-    h += "<tr><th rowspan='2' colspan='2' class='col-day'>日付</th><th rowspan='2' class='col-num'>新規<br>来場</th><th rowspan='2' class='col-num'>再<br>来場</th><th rowspan='2' class='col-num'>総<br>来場</th>";
-    h += "<th rowspan='2' class='col-num' style='background:#fff2cc;'>予算</th><th rowspan='2' class='col-num' style='background:#fff2cc;'>着地<br>予想</th><th rowspan='2' class='col-num'>実績</th><th rowspan='2' class='col-num'>予算<br>進捗</th><th rowspan='2' class='col-num'>予想<br>進捗</th><th rowspan='2' class='col-num'>商談<br>数</th><th rowspan='2' class='col-rate'>商談<br>率</th><th rowspan='2' class='col-rate'>成約<br>率</th>";
-    h += "<th colspan='3' style='background:#efefff;'>合計(昨年)</th><th colspan='3' style='background:#efefff;'>軽自動車(昨年)</th><th colspan='3' style='background:#efefff;'>普通車(昨年)</th>";
-    h += "<th colspan='3' style='background:#444; color:white;'>軽自動車</th><th colspan='3' style='background:#444; color:white;'>普通車</th></tr>";
-    h += "<tr><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th><th style='background:#444; color:white;'>新規</th><th style='background:#444; color:white;'>再来</th><th style='background:#444; color:white;'>実績</th><th style='background:#444; color:white;'>新規</th><th style='background:#444; color:white;'>再来</th><th style='background:#444; color:white;'>実績</th></tr></thead><tbody>";
+    // 1段目ヘッダー
+    h += "<tr><th rowspan='2' colspan='2' class='col-day' style='background:#44546a; color:white;'>日付</th>" +
+         "<th rowspan='2' class='col-num' style='background:#44546a; color:white;'>新規<br>来場</th>" +
+         "<th rowspan='2' class='col-num' style='background:#44546a; color:white;'>再<br>来場</th>" +
+         "<th rowspan='2' class='col-num' style='background:#44546a; color:white;'>総<br>来場</th>" +
+         "<th rowspan='2' class='col-num' style='background:#fff2cc; color:#000;'>予算</th>" +
+         "<th rowspan='2' class='col-num' style='background:#fff2cc; color:#000;'>着地<br>予想</th>" +
+         "<th rowspan='2' class='col-num' style='background:#44546a; color:white;'>実績</th>" +
+         "<th rowspan='2' class='col-num' style='background:#44546a; color:white;'>予算<br>進捗</th>" +
+         "<th rowspan='2' class='col-num' style='background:#44546a; color:white;'>予想<br>進捗</th>" +
+         "<th rowspan='2' class='col-num' style='background:#44546a; color:white;'>商談<br>数</th>" +
+         "<th rowspan='2' class='col-rate' style='background:#44546a; color:white;'>商談<br>率</th>" +
+         "<th rowspan='2' class='col-rate' style='background:#44546a; color:white;'>成約<br>率</th>" +
+         "<th colspan='3' style='background:#efefff; color:#000;'>合計(昨年)</th><th colspan='3' style='background:#efefff; color:#000;'>軽自動車(昨年)</th><th colspan='3' style='background:#efefff; color:#000;'>普通車(昨年)</th>" +
+         "<th colspan='3' style='background:#444; color:white;'>軽自動車</th><th colspan='3' style='background:#444; color:white;'>普通車</th></tr>";
+    // 2段目ヘッダー
+    h += "<tr><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th><th style='background:#efefff;'>新規</th><th style='background:#efefff;'>再来</th><th style='background:#efefff;'>成約</th>" +
+         "<th style='background:#444; color:white;'>新規</th><th style='background:#444; color:white;'>再来</th><th style='background:#444; color:white;'>成約</th><th style='background:#444; color:white;'>新規</th><th style='background:#444; color:white;'>再来</th><th style='background:#444; color:white;'>成約</th></tr></thead><tbody>";
 
     Object.keys(sum).sort().forEach(date => {
         var s = sum[date]; var d = new Date(date);
