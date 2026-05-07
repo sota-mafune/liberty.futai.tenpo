@@ -256,29 +256,38 @@ function showPage(id) { document.querySelectorAll('.page-content').forEach(p => 
 function filterStoreByGroup() { renderAll(); }
 function filterStaffByStore() { renderAll(); }
 
-// --- 日別推移テーブル (合計行追加 & 幅最適化クラス付与) ---
 function buildDailyTable(sum, totalS) {
     const wDays = ["日", "月", "火", "水", "木", "金", "土"];
     var h = "<table class='daily-table'><thead>";
+    
     // 1段目ヘッダー
-    h += "<tr><th rowspan='2' colspan='2' class='w-date'>日付</th><th rowspan='2' class='w-num'>新規<br>来場</th><th rowspan='2' class='w-num'>再<br>来場</th><th rowspan='2' class='w-num'>総<br>来場</th>";
-    h += "<th rowspan='2' class='w-num' style='background:#fff2cc; color:#000;'>予算</th><th rowspan='2' class='w-num' style='background:#fff2cc; color:#000;'>着地<br>予想</th><th rowspan='2' class='w-num'>実績</th><th rowspan='2' class='w-num'>予算<br>進捗</th><th rowspan='2' class='w-num'>予想<br>進捗</th><th rowspan='2' class='w-num'>商談<br>数</th><th rowspan='2' class='w-rate'>商談<br>率</th><th rowspan='2' class='w-rate'>成約<br>率</th>";
-    h += "<th colspan='3' class='bg-last-year'>合計(昨年)</th><th colspan='3' class='bg-last-year'>軽(昨年)</th><th colspan='3' class='bg-last-year'>普通(昨年)</th>";
-    h += "<th colspan='3' class='bg-now-k'>軽自動車</th><th colspan='3' class='bg-now-f'>普通車</th></tr>";
+    h += "<tr><th rowspan='2' colspan='2'>日付</th><th rowspan='2' class='w-num'>新規<br>来場</th><th rowspan='2' class='w-num'>再<br>来場</th><th rowspan='2' class='w-num'>総<br>来場</th>" +
+         "<th rowspan='2' class='w-mid' style='background:#fff2cc; color:#000;'>予算</th><th rowspan='2' class='w-mid' style='background:#fff2cc; color:#000;'>着地<br>予想</th><th rowspan='2' class='w-num'>実績</th><th rowspan='2' class='w-mid'>予算<br>進捗</th><th rowspan='2' class='w-mid'>予想<br>進捗</th><th rowspan='2' class='w-num'>商談<br>数</th><th rowspan='2' class='w-rate'>商談<br>率</th><th rowspan='2' class='w-rate'>成約<br>率</th>" +
+         "<th colspan='3' class='bg-last-year'>合計(昨年)</th><th colspan='3' class='bg-last-year'>軽(昨年)</th><th colspan='3' class='bg-last-year'>普通(昨年)</th>" +
+         "<th colspan='3' class='bg-now-k'>軽自動車</th><th colspan='3' class='bg-now-f'>普通車</th></tr>";
+         
     // 2段目ヘッダー
-    h += "<tr><th class='bg-last-year'>新</th><th class='bg-last-year'>再</th><th class='bg-last-year'>成</th><th class='bg-last-year'>新</th><th class='bg-last-year'>再</th><th class='bg-last-year'>成</th><th class='bg-last-year'>新</th><th class='bg-last-year'>再</th><th class='bg-last-year'>成</th><th class='bg-now-k'>新</th><th class='bg-now-k'>再</th><th class='bg-now-k'>実</th><th class='bg-now-f'>新</th><th class='bg-now-f'>再</th><th class='bg-now-f'>実</th></tr></thead><tbody>";
+    h += "<tr><th class='bg-last-year w-last'>新</th><th class='bg-last-year w-last'>再</th><th class='bg-last-year w-last'>成</th><th class='bg-last-year w-last'>新</th><th class='bg-last-year w-last'>再</th><th class='bg-last-year w-last'>成</th><th class='bg-last-year w-last'>新</th><th class='bg-last-year w-last'>再</th><th class='bg-last-year w-last'>成</th>" +
+         "<th class='bg-now-k w-last'>新</th><th class='bg-now-k w-last'>再</th><th class='bg-now-k w-last'>実</th><th class='bg-now-f w-last'>新</th><th class='bg-now-f w-last'>再</th><th class='bg-now-f w-last'>実</th></tr></thead><tbody>";
 
-    // --- 各行の描画 ---
+    // 各日のデータ行
     Object.keys(sum).sort().forEach(date => {
         var s = sum[date]; var d = new Date(date);
         var vn = (s.v_n_k||0)+(s.v_n_f||0), rv = (s.rv_k||0)+(s.rv_f||0), totv = vn+rv, act = (s.j_k||0)+(s.j_f||0), bud = s.budget_current||0, sho = (s.sho_k||0)+(s.sho_f||0);
         var prog = act - bud; var w = d.getDay();
         var rowStyle = w === 0 ? "color:red;" : (w === 6 ? "color:blue;" : "");
         
-        h += `<tr><td class='w-date-n'>${d.getDate()}</td><td class='w-date-w' style='${rowStyle}'>${wDays[w]}</td><td>${vn||""}</td><td>${rv||""}</td><td>${totv||""}</td><td style='background:#fff2cc;'>${bud||""}</td><td style='background:#fff2cc;'>${bud||""}</td><td>${act||""}</td><td style='${prog < 0 ? "color:red" : ""}'>${prog||"0"}</td><td>0</td><td>${sho||""}</td><td>${vn?Math.round(sho/vn*100):0}%</td><td>${totv?Math.round(act/totv*100):0}%</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>${s.v_n_k||""}</td><td>${s.rv_k||""}</td><td>${s.j_k||""}</td><td>${s.v_n_f||""}</td><td>${s.rv_f||""}</td><td>${s.j_f||""}</td></tr>`;
+        h += `<tr><td class='w-date-n'>${d.getDate()}</td><td class='w-date-w' style='${rowStyle}'>${wDays[w]}</td>` +
+             `<td>${vn||""}</td><td>${rv||""}</td><td>${totv||""}</td>` +
+             `<td style='background:#fff2cc;'>${bud||""}</td><td style='background:#fff2cc;'>${bud||""}</td>` +
+             `<td>${act||""}</td><td style='${prog < 0 ? "color:red" : ""}'>${prog||"0"}</td><td>0</td>` +
+             `<td>${sho||""}</td><td>${vn?Math.round(sho/vn*100):0}%</td><td>${totv?Math.round(act/totv*100):0}%</td>` +
+             `<td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>` + // 昨年
+             `<td>${s.v_n_k||""}</td><td>${s.rv_k||""}</td><td>${s.j_k||""}</td>` + // 軽
+             `<td>${s.v_n_f||""}</td><td>${s.rv_f||""}</td><td>${s.j_f||""}</td></tr>`; // 普
     });
 
-    // --- 合計行の追加 ---
+    // --- 合計行 ---
     var t = totalS;
     var tvn = (t.v_n_k||0)+(t.v_n_f||0), trv = (t.rv_k||0)+(t.rv_f||0), ttot = tvn+trv, tact = (t.j_k||0)+(t.j_f||0), tbud = t.budget_current||0, tsho = (t.sho_k||0)+(t.sho_f||0);
     h += `<tr class='daily-total-row'><td colspan='2'>合計</td><td>${tvn}</td><td>${trv}</td><td>${ttot}</td><td style='background:#ffd966'>${tbud}</td><td style='background:#ffd966'>${tbud}</td><td>${tact}</td><td>${tact-tbud}</td><td>0</td><td>${tsho}</td><td>${tvn?Math.round(tsho/tvn*100):0}%</td><td>${ttot?Math.round(tact/ttot*100):0}%</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>${t.v_n_k}</td><td>${t.rv_k}</td><td>${t.j_k}</td><td>${t.v_n_f}</td><td>${t.rv_f}</td><td>${t.j_f}</td></tr>`;
