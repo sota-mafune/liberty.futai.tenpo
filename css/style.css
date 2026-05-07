@@ -97,3 +97,11 @@ th, td {
 .force-red { color: #ff0000 !important; }
 #loading { padding: 20px; color: #e67e22; font-weight: bold; }
 .page-content { display: none; } .page-content.active { display: block; }
+
+.daily-table { width: 100% !important; table-layout: fixed !important; font-size: 9px !important; }
+.daily-table th, .daily-table td { width: auto !important; min-width: 0 !important; max-width: none !important; padding: 3px 0 !important; }
+
+/* 列ごとの幅指定 */
+.col-day { width: 22px !important; }
+.col-num { width: 32px !important; }
+.col-rate { width: 40px !important; }
